@@ -17,10 +17,49 @@
   </body>
   <script>
 
+    function geoVinkel(lat1, long1, lat2, long2, alt1, alt2)
+    {
+      var dN = lat2-lat1;
+      var dE = long2-long1;
+      var r = 6371*1000;
+      var r2 = r*Math.cos(lat1*Math.PI/180);
+      var dNm = Math.sqrt(2*(r**2)-2*(r**2)*Math.cos(dN*Math.PI/180));
+      var dEm = Math.sqrt(2*(r2**2)-2*(r2**2)*Math.cos(dE*Math.PI/180));
+      var dH = alt2-alt1;
+      var Vh = 0;
+
+      var Vh1 = Math.atan(dNm/dEm)*180/Math.PI;
+
+      if(dN >= 0) {
+          if(dE >= 0) {
+                Vh = 90 - Vh1
+          } else {
+              Vh = 270 + Vh1
+          }
+      } if(dN < 0) {
+          if(dE >= 0) {
+              Vh = 90 + Vh1;
+          } else {
+              Vh = 270 - Vh1;
+          }
+      }
+
+      var L = Math.sqrt(dNm**2 + dEm**2);
+      var Al = Math.sqrt(L**2 + dH**2);
+      var Vv = -Math.atan(dH/L)*180/Math.PI;
+
+
+      return {Al, Vv, Vh};
+    }
+
     let socket = new WebSocket("ws://localhost:8081");
 
     var count = 1;
-    var last_marker = []
+
+    var last_pos = [];
+    var last_height = 0;
+    var markers = [];
+    var lines = [];
 
     var map = L.map("map").setView([59.419501, 10.487164], 16);
 
@@ -33,15 +72,34 @@
     }).addTo(map);
 
     map.on("click", function(e) {
-      var height = prompt("Høyde");
-      if(height) {
-        L.marker(e.latlng).bindPopup("<b>"+count+"</b><br>"+height+"m").addTo(map);
-        if(last_marker) {
-          L.polyline([last_marker, e.latlng], {color: "red"}).addTo(map);
+
+      var height = prompt("Høyde")
+      if(height)
+      {
+        if(markers.length > 0) {
+          var info = geoVinkel(parseFloat(e.latlng.lat), parseFloat(e.latlng.lng), parseFloat(last_pos.lat), parseFloat(last_pos.lng), parseFloat(height), parseFloat(last_height));
+          console.log(info);
+          if(info.Vv <= 30 && info.Vv >= -30)
+          {
+            var marker = L.marker(e.latlng).bindPopup("<b>"+count+"</b><br>"+height+"m").addTo(map);
+            markers.push(marker);
+            var line = L.polyline([last_pos, e.latlng], {color: "red"}).addTo(map);
+            socket.send(count+"|"+e.latlng.lat+"|"+e.latlng.lng+"|"+height);
+            count += 1;
+            last_pos = e.latlng;
+            lines.push(line);
+            last_height = height;
+          } else {
+            alert("OIIII! For bratt for flyet gitt.");
+          }
+        } else {
+          var marker = L.marker(e.latlng).bindPopup("<b>"+count+"</b><br>"+height+"m").addTo(map);
+          socket.send(count+"|"+e.latlng.lat+"|"+e.latlng.lng+"|"+height);
+          last_pos = e.latlng;
+          markers.push(marker);
+          last_height = height;
+          count += 1;
         }
-        last_marker = e.latlng;
-        socket.send(count+"|"+e.latlng.lat+"|"+e.latlng.lng+"|"+height);
-        count += 1;
       }
     });
 
