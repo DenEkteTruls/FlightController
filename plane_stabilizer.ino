@@ -4,7 +4,7 @@
 MPU9250 mpu;
 Servo sideror;
 int pitch_v_max_servo = 45;
-int yaw_v_max_servo 
+int yaw_v_max_servo = 0;  // Denne må endres
 float turn_angle = 0;
 
 void setup() {
