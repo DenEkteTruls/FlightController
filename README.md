@@ -4,4 +4,4 @@
 
 Roper skal fly! - og det automatisk!!
 
-"Fly kommer og fly går, akkurat nå tok gikk flyet i bakken"  -Robert B.M., 2021
+"Fly kommer og fly går, akkurat nå gikk flyet i bakken"  -Robert B.M., 2021
