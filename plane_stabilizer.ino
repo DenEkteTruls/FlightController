@@ -1,10 +1,12 @@
 #include "MPU9250.h"
 #include "Servo.h"
 
+#DEFINE activate A7
+
 MPU9250 mpu;
 Servo sideror;
 int pitch_v_max_servo = 45;
-int yaw_v_max_servo = 0;  // Denne må endres
+int yaw_v_max_servo = 0;  // Denna må cmd endres
 float turn_angle = 0;
 
 void setup() {
@@ -25,7 +27,8 @@ void setup() {
 void loop() {
   if (mpu.update()) {
     static uint32_t prev_ms = millis();
-    if(millis() - prev_ms >= 25) {
+    int ar = analogRead(activate);
+    if((millis() - prev_ms >= 25) && ar >= 950) {
       prev_ms = millis();
       stabilize();
     }
